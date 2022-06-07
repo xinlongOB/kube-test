@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: web
+  labels:
+    app: webpod
+  name: webpod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webpod
+  template:
+    metadata:
+      labels:
+        app: webpod
+    spec:
+      containers:
+        - name: webpod
+          imagePullPolicy: IfNotPresent
+          image: $REGISTRY/$DOCKERHUB_NAMESPACE/$APP_NAME  # 指定镜像
+          ports:
+            - name: tcp-80
+              protocol: TCP
+              containerPort: 80  # 容器内端口
+          volumeMounts:
+            - mountPath: /home/   # 容器内路径
+              name: go-logs   # 挂载名称
+          resources:
+            gpu:
+              type: nvidia.com/gpu
+              value: ''
+            limits: {}
+      serviceAccount: default
+      initContainers: []
+      volumes: 
+      - name: go-logs   # 挂载名称
+        hostPath:
+          path: /opt/   # 宿主机路径
+      imagePullSecrets: null
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+
